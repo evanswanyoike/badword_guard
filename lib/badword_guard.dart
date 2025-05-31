@@ -32,17 +32,10 @@ class LanguageChecker {
     for (var badWord in _badWords) {
       if (badWord.trim().isEmpty) continue;
 
-      // Check if word contains non-Latin characters
-      if (_containsNonLatinChars(badWord)) {
-        // For non-Latin scripts, use case-insensitive replacement
-        result = _replaceNonLatinWord(result, badWord);
-      } else {
-        // Use word boundaries for Latin scripts
-        result = result.replaceAllMapped(
-          RegExp(r'\b' + RegExp.escape(badWord) + r'\b', caseSensitive: false),
-          (match) => '*' * match.group(0)!.length,
-        );
-      }
+      // Simple case-insensitive replacement
+      result = result.replaceAll(
+          RegExp(RegExp.escape(badWord), caseSensitive: false),
+          '*' * badWord.length);
     }
     return result;
   }
@@ -50,25 +43,8 @@ class LanguageChecker {
   bool _containsExactWord(String input, String word) {
     if (input.trim().isEmpty || word.trim().isEmpty) return false;
 
-    // Check if word contains non-Latin characters
-    if (_containsNonLatinChars(word)) {
-      return _containsNonLatinWord(input, word);
-    } else {
-      // Use Unicode-aware word boundaries for Latin scripts
-      try {
-        final regex = RegExp(
-          r'(?<!\p{L}\p{M}*)' + RegExp.escape(word) + r'(?!\p{L}\p{M}*)',
-          caseSensitive: false,
-          unicode: true,
-        );
-        return regex.hasMatch(input);
-      } catch (e) {
-        // Fallback to simple word boundary if Unicode regex fails
-        final regex =
-            RegExp(r'\b' + RegExp.escape(word) + r'\b', caseSensitive: false);
-        return regex.hasMatch(input);
-      }
-    }
+    // Simple approach: just check if the word exists in the input (case-insensitive)
+    return input.toLowerCase().contains(word.toLowerCase());
   }
 
   bool _containsNonLatinChars(String text) {
